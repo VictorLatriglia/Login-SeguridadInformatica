@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title> Login Page </title>
+    <style>
+        Body {
+            font-family: Calibri, Helvetica, sans-serif;
+            background-color: pink;
+        }
+
+        button {
+            background-color: #4CAF50;
+            width: 100%;
+            color: black;
+            padding: 15px;
+            margin: 10px 0px;
+            border: none;
+            cursor: pointer;
+        }
+
+        form {
+            border: 3px solid #f1f1f1;
+        }
+
+        input[type=text],
+        input[type=password] {
+            width: 100%;
+            margin: 8px 0;
+            padding: 12px 20px;
+            display: inline-block;
+            border: 2px solid green;
+            box-sizing: border-box;
+        }
+
+        button:hover {
+            opacity: 0.7;
+        }
+
+        .cancelbtn {
+            width: auto;
+            padding: 10px 18px;
+            margin: 10px 5px;
+        }
+
+
+        .container {
+            padding: 25px;
+            background-color: lightblue;
+        }
+    </style>
+</head>
+
+<body>
+    <center>
+        <h1> Student Login Form </h1>
+    </center>
+    <div class="container">
+        <label>Username : </label>
+        <input type="text" id="userName" placeholder="Enter Username" name="username" required />
+        <label>Password : </label>
+        <input type="password" id="password" placeholder="Enter Password" name="password" required />
+        <button id="submit">Login</button>
+        <button id="register" style="background-color: red;">Register</button>
+
+    </div>
+</body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    var publicKey;
+    var pemPublicKey = `MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9O/ZodAC5eG+4pRFKDLpwPCd0PMDqx5I4FTU+gq+0G9naJG61uHqSrLZYVoY2J5aOlxj73/k6mEgwkgm2e5+CQUK/PCqMohhnMNY2FwFS5B3c2e0va86UIbrFlA1QNeZGcksMb6cr4ROLlFX0Q8S8MVlm3UpVT2GIrvIO23ta8koOEmkP/4MFG7Pwd8NArrP0ExyJcxu8UFSXAygbpRZa5YfcZlWs1i5YCF9Olej4cPI0EdIYlD0gv8vwpg09SaFO2huAwW0OFuaDpbr5Hpb6PjfrmI9I4BBYAb8v9IvVMGfbCMEmgyp2S3zdj24moLIEGfb+qPU7cRFu1yZiq/B8QIDAQAB`;
+
+    function base64ToArrayBuffer(b64) {
+        console.log('parsing to array from base')
+        var byteString = window.atob(b64);
+        var byteArray = new Uint8Array(byteString.length);
+        for (var i = 0; i < byteString.length; i++) { byteArray[i] = byteString.charCodeAt(i); }
+        return byteArray;
+    }
+
+    function arrayBufferToBase64(buffer) {
+        console.log('parsing to base from array')
+        var binary = '';
+        var bytes = new Uint8Array(buffer);
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) { binary += String.fromCharCode(bytes[i]); }
+        return window.btoa(binary);
+    }
+
+
+</script>
+<script>
+    function SendInformation() {
+        var username = document.querySelector("#userName").value;
+        var password = document.querySelector("#password").value;
+        var enc = new TextEncoder()
+        var encmessage = enc.encode(password)
+
+        window.crypto.subtle.importKey(
+            "spki",
+            base64ToArrayBuffer(pemPublicKey),
+            { name: "RSA-OAEP", hash: { name: "SHA-256" } },
+            false,
+            ["encrypt"])
+            .then(function (key) {
+                window.crypto.subtle.encrypt({
+                    name: "RSA-OAEP"
+                }, key, encmessage).then(function (encrypted) {
+                    var encodedData = arrayBufferToBase64(encrypted);
+                    console.log(encodedData)
+                    let url = 'https://login20220613193908.azurewebsites.net/Login';
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ userName: username, password: encodedData }),
+                        success: function (res) {
+                            if (res == true) {
+                                alert('Sesión iniciada correctamente');
+                                $("#userName").val('');
+                                $("#password").val('');
+                            }
+                            else
+                                alert('Datos incorrectos')
+                        },
+                        error: function (err) {
+                            alert("Error" + err)
+                        }
+                    })
+                })
+            })
+
+    }
+    function RegisterUser() {
+        var username = document.querySelector("#userName").value;
+        var password = document.querySelector("#password").value;
+        var enc = new TextEncoder()
+        var encmessage = enc.encode(password)
+
+        window.crypto.subtle.importKey(
+            "spki",
+            base64ToArrayBuffer(pemPublicKey),
+            { name: "RSA-OAEP", hash: { name: "SHA-256" } },
+            false,
+            ["encrypt"])
+            .then(function (key) {
+                window.crypto.subtle.encrypt({
+                    name: "RSA-OAEP"
+                }, key, encmessage).then(function (encrypted) {
+                    var encodedData = arrayBufferToBase64(encrypted);
+                    console.log(encodedData)
+                    let url = 'https://login20220613193908.azurewebsites.net/register';
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ userName: username, password: encodedData }),
+                        success: function (res) {
+                            if (res == true) {
+                                alert('usuario creado')
+                                $("#userName").val('');
+                                $("#password").val('');
+                            }
+                            else
+                                alert('Datos incorrectos')
+                        },
+                        error: function (err) {
+                            alert("Error");
+                            console.log(err);
+                        }
+                    })
+                })
+            })
+
+    }
+
+    document.querySelector("#submit").addEventListener("click", SendInformation);
+    document.querySelector("#register").addEventListener("click", RegisterUser);
+</script>
+
+</html>
